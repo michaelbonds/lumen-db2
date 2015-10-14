@@ -3,10 +3,10 @@ namespace MichaelB\Database\DB2;
 
 use MichaelB\Database\DB2\Connectors\ODBCConnector;
 use MichaelB\Database\DB2\Connectors\IBMConnector;
-
+use MichaelB\Database\DB2\Console\Commands\PublishCommand;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Foundation\AliasLoader;
-use Config;
+use Illuminate\Contracts\Console\Kernel;
 
 class DB2ServiceProvider extends ServiceProvider {
 
@@ -24,6 +24,7 @@ class DB2ServiceProvider extends ServiceProvider {
      */
     public function boot()
     {
+        //
     }
 
     /**
@@ -33,42 +34,33 @@ class DB2ServiceProvider extends ServiceProvider {
      */
     public function register()
     {
-
-        // get the configs
-        $conns = is_array(Config::get('laravel-db2::database.connections')) ? Config::get('laravel-db2::database.connections') : [];
-
-        // Add my database configurations to the default set of configurations
-        $this->app['config']['database.connections'] = array_merge($conns, $this->app['config']['database.connections']);
+        // Merge our config 'defaults'
+        $this->mergeConfigFrom(__DIR__.'/config/config.php', 'laravel-db2');
+        $database_connections = config('database.connections');
 
         //Extend the connections with pdo_odbc and pdo_ibm drivers
-        foreach(Config::get('database.connections') as $conn => $config)
+        foreach($database_connections as $connection => $config)
         {
+            switch ($config['driver']) {
+                case 'odbc':
+                    $connector = new ODBCConnector();
+                    break;
 
-            //Only use configurations that feature a "odbc" or "ibm" driver
-            if(!isset($config['driver']) || !in_array($config['driver'], ['odbc', 'ibm']) )
-            {
-                continue;
+                case 'ibm':
+                    $connector = new IBMConnector();
+                    break;
+
+                default:
+                    continue 2;
             }
 
             //Create a connector
-            $this->app['db']->extend($conn, function($config)
-            {        
-                switch ($config['driver']) {
-                    case 'odbc':
-                        $connector = new ODBCConnector();
-                        break;
-                    case 'ibm':
-                        $connector = new IBMConnector();
-                        break;
-                    default:
-                        break;
-                }
+            $this->app['db']->extend($connection, function($config) use ($connector) {
+                $config = array_replace_recursive(config('laravel-db2'), $config);
                 $db2Connection = $connector->connect($config);
                 return new DB2Connection($db2Connection, $config["database"], $config["prefix"], $config);
             });
-
         }
-
     }
 
     /**
