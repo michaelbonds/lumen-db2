@@ -1,76 +1,157 @@
-# laravel-db2
-
 ## This is an adaptation of [cooperl22's laravel-db2](https://www.github.com/cooperl22/laravel-db2) to work with [Lumen](http://lumen.laravel.com/)
 
+# Lumen-DB2
+
 ### Installation
-...
+Install lumen-db2 via composer:
+
+```sh
+composer require michaelb/lumen-db2
+```
+
+Uncomment call to Eloquent and add the DB2ServiceProvideer to ``bootstrap/app.php``:
+
+```php
+// ...
+
+/*
+|--------------------------------------------------------------------------
+| Create The Application
+|--------------------------------------------------------------------------
+|
+| Here we will load the environment and create the application instance
+| that serves as the central piece of this framework. We'll use this
+| application as an "IoC" container and router for this framework.
+|
+*/
+
+$app = new Laravel\Lumen\Application(
+    realpath(__DIR__.'/../')
+);
+
+// $app->withFacades();
+
+$app->withEloquent(); // <- Uncomment this
+
+// ...
+
+/*
+|--------------------------------------------------------------------------
+| Register Service Providers
+|--------------------------------------------------------------------------
+|
+| Here we will register all of the application's service providers which
+| are used to bind services into the container. Service providers are
+| totally optional, so you are not required to uncomment this line.
+|
+*/
+
+$app->register(MichaelB\Database\DB2\DB2ServiceProvider::class); // <- Add this
+
+```
 
 ### Configuration
 
-There are two ways to configure laravel-db2. You can choose the most convenient way for you. You can put your DB2 credentials into ``app/config/database.php`` file.
-
-#### Configure DB2 using ``app/config/database.php`` file
-
-Simply add this code at the end of your ``app/config/database.php`` file:
+Create the ``app/config/database.php`` file:
 
 ```php
-    /*
-    |--------------------------------------------------------------------------
-    | DB2 Databases
-    |--------------------------------------------------------------------------
-    */
 
-    'odbc' => [
-        'driver'         => 'odbc',
-        'host'           => '',
-        'database'       => '',
-        'username'       => '',
-        'password'       => '',
-        'charset'        => 'utf8',
-        'ccsid'          => 1208,
-        'prefix'         => '',
-        'schema'         => '',
-        'i5_libl'        => '',
-        'i5_lib'         => '',
-        'i5_commit'      => 0,
-        'i5_naming'      => 0,
-        'i5_date_fmt'    => 5,
-        'i5_date_sep'    => 0,
-        'i5_decimal_sep' => 0,
-        'i5_time_fmt'    => 0,
-        'i5_time_sep'    => 0,
-        'options'  => [
-            PDO::ATTR_CASE => PDO::CASE_LOWER,
-            PDO::ATTR_EMULATE_PREPARES => false,
-            PDO::ATTR_PERSISTENT => false
+/*
+ |--------------------------------------------
+ | Configuration Defaults
+ |--------------------------------------------
+ */
+
+return [
+
+    'connections' => [
+
+        'as400' => [
+
+            'driver'               => 'odbc',
+
+             // General settings
+            'host'                 => '',
+            'username'             => '',
+            'password'             => '',
+
+            //Server settings
+            'database'             => '',
+            'prefix'               => '',
+            'schema'               => '',
+            'signon'               => 3,
+            'ssl'                  => 0,
+            'commitMode'           => 2,
+            'connectionType'       => 0,
+            'defaultLibraries'     => '',
+            'naming'               => 0,
+            'unicodeSql'           => 0,
+
+            // Format settings
+            'dateFormat'           => 5,
+            'dateSeperator'        => 0,
+            'decimal'              => 0,
+            'timeFormat'           => 0,
+            'timeSeparator'        => 0,
+
+            // Performances settings
+            'blockFetch'           => 1,
+            'blockSizeKB'          => 32,
+            'allowDataCompression' => 1,
+            'concurrency'          => 0,
+            'lazyClose'            => 0,
+            'maxFieldLength'       => 15360,
+            'prefetch'             => 0,
+            'queryTimeout'         => 1,
+
+            // Modules settings
+            'defaultPkgLibrary'    => '',
+            'defaultPackage'       => '',
+            'extendedDynamic'      => 1,
+
+            // Diagnostic settings
+            'QAQQINILibrary'       => '',
+            'sqDiagCode'           => '',
+
+            // Sort settings
+            'languageId'           => '',
+            'sortTable'            => '',
+            'sortSequence'         => 0,
+            'sortWeight'           => 0,
+            'jobSort'              => 0,
+
+            // Conversion settings
+            'allowUnsupportedChar' => 0,
+            'ccsid'                => 1208,
+            'graphic'              => 0,
+            'forceTranslation'     => 0,
+
+            // Other settings
+            'allowProcCalls'       => 0,
+            'DB2SqlStates'         => 0,
+            'debug'                => 0,
+            'trueAutoCommit'       => 0,
+            'catalogOptions'       => 3,
+            'libraryView'          => 0,
+            'ODBCRemarks'          => 0,
+            'searchPattern'        => 1,
+            'translationDLL'       => '',
+            'translationOption'    => 0,
+            'maxTraceSize'         => 0,
+            'multipleTraceFiles'   => 1,
+            'trace'                => 0,
+            'traceFilename'        => '',
+            'extendedColInfo'      => 0,
+            'options'  => [
+                PDO::ATTR_CASE => PDO::CASE_LOWER,
+                PDO::ATTR_EMULATE_PREPARES => false,
+                PDO::ATTR_PERSISTENT => false
             ]
-    ],
-
-    'ibm' => [
-        'driver'         => 'ibm',
-        'host'           => '',
-        'database'       => '',
-        'username'       => '',
-        'password'       => '',
-        'charset'        => 'utf8',
-        'ccsid'          => 1208,
-        'prefix'         => '',
-        'schema'         => '',
-        'i5_libl'        => '',
-        'i5_lib'         => '',
-        'i5_commit'      => 0,
-        'i5_naming'      => 0,
-        'i5_date_fmt'    => 5,
-        'i5_date_sep'    => 0,
-        'i5_decimal_sep' => 0,
-        'i5_time_fmt'    => 0,
-        'i5_time_sep'    => 0,
-        'options'  => [
-            PDO::ATTR_CASE => PDO::CASE_LOWER,
-            PDO::ATTR_EMULATE_PREPARES => false,
-            PDO::ATTR_PERSISTENT => false
         ]
-    ],
+    ]
+];
+
+
 
 ```
 driver setting is either 'odbc' for ODBC connection or 'ibm' for pdo_ibm connection
