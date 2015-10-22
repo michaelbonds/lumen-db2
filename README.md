@@ -64,6 +64,8 @@ Create the ``app/config/database.php`` file:
 
 return [
 
+    'fetch' => PDO::FETCH_CLASS,
+
     'connections' => [
 
         'as400' => [
