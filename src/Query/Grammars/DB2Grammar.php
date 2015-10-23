@@ -62,6 +62,9 @@ class DB2Grammar extends Grammar
      */
     protected function compileAnsiOffset(Builder $query, $components)
     {
+        // add an alias for the offset table
+        $components['from'] .= ' as off';
+
         // An ORDER BY clause is required to make this offset query work, so if one does
         // not exist we'll just create a dummy clause to trick the database and so it
         // does not complain about the queries for not having an "order by" clause.
@@ -106,7 +109,8 @@ class DB2Grammar extends Grammar
      */
     protected function compileOver($orderings)
     {
-        return "select row_number() over ({$orderings}) as row_num";
+        // not perfect, but it will have to do for now
+        return "select off.*, row_number() over ({$orderings}) as row_num";
     }
 
     protected function compileRowConstraint($query)
