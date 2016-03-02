@@ -1,14 +1,14 @@
 <?php
 namespace MichaelB\Database\DB2;
 
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use PDO;
-
 use Illuminate\Database\Connection;
-
 use MichaelB\Database\DB2\Schema\Builder;
 use MichaelB\Database\DB2\Query\Processors\DB2Processor;
 use MichaelB\Database\DB2\Query\Grammars\DB2Grammar as QueryGrammar;
 use MichaelB\Database\DB2\Schema\Grammars\DB2Grammar as SchemaGrammar;
+
 
 class DB2Connection extends Connection
 {
@@ -24,6 +24,78 @@ class DB2Connection extends Connection
     {
         parent::__construct($pdo, $database, $tablePrefix, $config);
         $this->currentSchema = $this->defaultSchema = strtoupper($config['schema']);
+    }
+
+    /**
+     * @return QueryBuilder
+     */
+    public function query()
+    {
+        return new QueryBuilder(
+          $this, $this->getQueryGrammar(), $this->getPostProcessor()
+        );
+    }
+
+    /**
+     * @param DB2Procedure $procedure
+     * @param array        $parameters
+     *
+     * @return mixed
+     */
+    public function callProcedure(DB2Procedure $procedure, $parameters = [])
+    {
+        $callable = $procedure->getProcedureName();
+        $sql = "CALL $callable(";
+
+        $format = $procedure->format();
+
+        foreach ($format as $key => $value) {
+            $sql .= "?,";
+        }
+
+        // remove last comma and add paren
+        $sql = substr($sql, 0, strlen($sql) - 1).")";
+
+        $outs = [];
+
+        foreach ($procedure->outs as $key => $value) {
+            $position = $procedure->getPositionOfParameter($key);
+            $outs[$key] = $parameters[$position];
+        }
+
+        return $this->run($sql, $parameters, function ($me, $sql, $bindings) use ($outs, $procedure) {
+            if ($me->pretending) {
+                return ['pretending' => true];
+            }
+
+            $statement = $this->getPdo()->prepare($sql);
+
+            $output = [];
+
+            // Bind values of out parameters
+            foreach ($outs as $key => $val) {
+                $position = $procedure->getPositionOfParameter($key);
+                $length = $procedure->getLengthOf($key);
+                $type = $procedure->outs[$key];
+                ${$key} = $bindings[$position];
+                $output[$key] = &${$key};
+                unset($bindings[$position]);
+
+                $statement->bindParam($position + 1, ${$key}, $type, $length);
+            }
+
+            // Bind values of in paramters
+            foreach($procedure->ins as $key => $type) {
+                $position = $procedure->getPositionOfParameter($key);
+                $value = $bindings[$position];
+
+                $statement->bindValue($position + 1, $value, $type);
+            }
+
+            $statement->execute();
+
+            return $output;
+        });
     }
 
     /**
@@ -43,7 +115,7 @@ class DB2Connection extends Connection
      */
     public function resetCurrentSchema()
     {
-        $this->setCurrentSchema($this->getDefaultSchema());
+        return $this->setCurrentSchema($this->getDefaultSchema());
     }
 
     /**
@@ -53,8 +125,7 @@ class DB2Connection extends Connection
      */
     public function setCurrentSchema($schema)
     {
-        //$this->currentSchema = $schema;
-        $this->statement('SET SCHEMA ?', [strtoupper($schema)]);
+        return $this->statement('SET SCHEMA ?', [strtoupper($schema)]);
     }
 
     /**
@@ -83,7 +154,6 @@ class DB2Connection extends Connection
      */
     protected function getDefaultSchemaGrammar()
     {
-
         return $this->withTablePrefix(new SchemaGrammar);
     }
 

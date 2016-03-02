@@ -3,12 +3,11 @@ namespace MichaelB\Database\DB2;
 
 use MichaelB\Database\DB2\Connectors\ODBCConnector;
 use MichaelB\Database\DB2\Connectors\IBMConnector;
-use MichaelB\Database\DB2\Console\Commands\PublishCommand;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Foundation\AliasLoader;
 use Illuminate\Contracts\Console\Kernel;
 
-class DB2ServiceProvider extends ServiceProvider {
+class DB2ServiceProvider extends ServiceProvider
+{
 
     /**
      * Indicates if loading of the provider is deferred.

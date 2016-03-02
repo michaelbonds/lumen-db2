@@ -4,7 +4,7 @@
 |--------------------------------------------------------------------------
 | DB2 Config
 |--------------------------------------------------------------------------
-Valeurs définies pour le niveau d'isolation, pour PDO (mot clé "CMT" ou "CommitMode" dans le DSN) :
+Values set for the isolation level for PDO (keyword "CMT" or "CommitMode" in the DSN) :
 0 = Commit immediate (*NONE)
 1 = Read committed (*CS)
 2 = Read uncommitted (*CHG)
