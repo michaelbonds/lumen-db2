@@ -88,6 +88,16 @@ abstract class DB2Procedure
         return array_search($key, $keys);
     }
 
+
+    /**
+     * @param $ouput array
+     * @return array
+     */
+    public function handleOutput($output = [])
+    {
+      return $output;
+    }
+
     /**
      * @param array $arguments
      * @return static

@@ -94,7 +94,7 @@ class DB2Connection extends Connection
 
             $statement->execute();
 
-            return $output;
+            return $procedure->handleOutput($output);
         });
     }
 
